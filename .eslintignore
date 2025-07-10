@@ -1,1 +1,4 @@
 dist/**
+**/index.html
+**/index.*.html
+**/assets/*.html
