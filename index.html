@@ -18,6 +18,89 @@
       Connect TL
     </button>
     <div id="cesiumContainer"></div>
+    <div
+      id="lineControls"
+      style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 10px;
+        border-radius: 6px;
+        font: 12px/1.4 sans-serif;
+        min-width: 220px;
+      "
+    >
+      <div style="font-weight: 600; margin-bottom: 6px">Line Parameters</div>
+      <label style="display: block; margin-bottom: 6px">
+        Mode:
+        <select id="lineMode">
+          <option value="physics" selected>Physics (tension/weight)</option>
+          <option value="length">Cable length</option>
+          <option value="sag">Sag ratio</option>
+        </select>
+      </label>
+      <label style="display: block; margin-bottom: 6px">
+        Cable preset:
+        <select id="cablePreset">
+          <option value="custom">Custom</option>
+          <option value="acsr">ACSR</option>
+          <option value="aaac">AAAC</option>
+          <option value="steel">Steel</option>
+        </select>
+      </label>
+      <label style="display: block; margin-bottom: 6px">
+        Sag ratio (0.02–0.12):
+        <input
+          id="sagRatio"
+          type="number"
+          step="0.005"
+          min="0"
+          max="0.5"
+          value="0.06"
+          style="width: 80px"
+        />
+      </label>
+      <label style="display: block; margin-bottom: 6px">
+        Cable length (m, optional):
+        <input
+          id="cableLength"
+          type="number"
+          step="1"
+          min="0"
+          placeholder="auto"
+          style="width: 100px"
+        />
+      </label>
+      <label style="display: block; margin-bottom: 6px">
+        Linear weight (N/m):
+        <input
+          id="linearWeight"
+          type="number"
+          step="0.1"
+          min="0"
+          value="30"
+          style="width: 80px"
+        />
+      </label>
+      <label style="display: block; margin-bottom: 6px">
+        Horizontal tension (N):
+        <input
+          id="hTension"
+          type="number"
+          step="10"
+          min="0"
+          value="15000"
+          style="width: 100px"
+        />
+      </label>
+      <small
+        >Use either sag ratio or length; tension/weight will be used in future
+        refinements.</small
+      >
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
