@@ -1,0 +1,80 @@
+import { JulianDate } from "cesium";
+
+export class WeatherManager {
+  constructor() {
+    this.weatherData = null;
+    this.startDate = null;
+    this.endDate = null;
+  }
+
+  async fetchWeatherData(latitude, longitude) {
+    const start = "2023-01-01";
+    const end = "2023-12-30";
+
+    // fetch daily min/max temp
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${start}&end_date=${end}&daily=temperature_2m_max,temperature_2m_min`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.daily) {
+        throw new Error("No daily data received");
+      }
+
+      this.weatherData = {
+        startTime: JulianDate.fromIso8601(`${data.daily.time[0]}T00:00:00Z`),
+        maxTemps: new Float32Array(data.daily.temperature_2m_max),
+        minTemps: new Float32Array(data.daily.temperature_2m_min),
+      };
+
+      console.log(
+        `Loaded ${this.weatherData.maxTemps.length} days of weather data.`,
+      );
+      return true;
+    } catch (error) {
+      console.error("Failed to fetch weather data:", error);
+      return false;
+    }
+  }
+
+  getTemperatureAtTime(julianDate) {
+    if (!this.weatherData) {
+      // console.warn("Weather data not loaded yet. Returning default 20°C.");
+      return 20; // Default to 20°C if no data
+    }
+
+    // Calculate time difference from start
+    const diffSeconds = JulianDate.secondsDifference(
+      julianDate,
+      this.weatherData.startTime,
+    );
+
+    // Handle looping (year approx 31536000 seconds)
+    const yearSeconds = 31536000;
+    let normalizedDiff = diffSeconds % yearSeconds;
+    if (normalizedDiff < 0) {
+      normalizedDiff += yearSeconds;
+    }
+
+    // Determine day index and hour of day
+    const dayIndex = Math.floor(normalizedDiff / 86400);
+    const hourOfDay = (normalizedDiff % 86400) / 3600;
+
+    if (dayIndex >= 0 && dayIndex < this.weatherData.maxTemps.length) {
+      const max = this.weatherData.maxTemps[dayIndex];
+      const min = this.weatherData.minTemps[dayIndex];
+
+      // Sinusoidal interpolation to simulate daily cycle
+      // Peak at 14:00 (2 PM), Lowest at 02:00 (2 AM)
+      // Formula: Avg + Amp * sin(2*PI * (h - 8) / 24)
+      const avg = (max + min) / 2;
+      const amp = (max - min) / 2;
+      const temp = avg + amp * Math.sin((2 * Math.PI * (hourOfDay - 8)) / 24);
+
+      return temp;
+    }
+
+    return 20; // Fallback
+  }
+}
