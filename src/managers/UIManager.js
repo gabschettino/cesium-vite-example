@@ -1,10 +1,8 @@
 export class UIManager {
   constructor() {
-    // Elements
     this.lineModeSelect = document.getElementById("lineMode");
     this.conductorTypeSelect = document.getElementById("conductorType");
 
-    // Physics Inputs
     this.physicsInputs = document.getElementById("physicsInputs");
     this.tensionPctInput = document.getElementById("tensionPct");
     this.hTensionInput = document.getElementById("hTension");
@@ -15,24 +13,19 @@ export class UIManager {
     this.thermalMultiplierInput = document.getElementById("thermalMultiplier");
     this.thermalMultiplierVal = document.getElementById("thermalMultiplierVal");
 
-    // Geometric Inputs
     this.geometricInputs = document.getElementById("geometricInputs");
     this.sagInputGroup = document.getElementById("sagInputGroup");
     this.lengthInputGroup = document.getElementById("lengthInputGroup");
     this.sagRatioInput = document.getElementById("sagRatio");
     this.cableLengthInput = document.getElementById("cableLength");
 
-    // Display
     this.catenaryConstantDisplay = document.getElementById(
       "catenaryConstantDisplay",
     );
 
-    // Buttons
     this.placeObjectBtn = document.getElementById("placeObjectBtn");
     this.connectObjectsBtn = document.getElementById("connectObjectsBtn");
 
-    // Data
-    // Alpha is thermal expansion coefficient (1/C)
     this.conductors = {
       drake: {
         name: "ACSR Drake",
@@ -65,12 +58,10 @@ export class UIManager {
   }
 
   initialize() {
-    // Initial State
     this.updateVisibility();
     this.updateConductorValues();
     this.updateCalculations();
 
-    // Event Listeners
     this.lineModeSelect.addEventListener("change", () =>
       this.updateVisibility(),
     );
@@ -138,7 +129,7 @@ export class UIManager {
       this.linearWeightInput.style.color = "#888";
     } else {
       this.linearWeightInput.readOnly = false;
-      this.rtsStrengthInput.readOnly = false; // Allow editing RTS for custom
+      this.rtsStrengthInput.readOnly = false;
       this.linearWeightInput.style.background = "";
       this.linearWeightInput.style.color = "";
     }
@@ -149,12 +140,10 @@ export class UIManager {
     const rtsN = rtsKn * 1000;
 
     if (fromPct) {
-      // Calculate Tension from % RTS
       const pct = parseFloat(this.tensionPctInput.value) || 20;
       const tension = (pct / 100) * rtsN;
       this.hTensionInput.value = Math.round(tension);
     } else {
-      // Calculate % RTS from Tension (if possible)
       const tension = parseFloat(this.hTensionInput.value) || 0;
       if (rtsN > 0) {
         const pct = (tension / rtsN) * 100;
@@ -162,7 +151,6 @@ export class UIManager {
       }
     }
 
-    // Update Catenary Constant Display
     const h = parseFloat(this.hTensionInput.value) || 0;
     const w = parseFloat(this.linearWeightInput.value) || 1;
     const constant = h / w;
@@ -181,6 +169,7 @@ export class UIManager {
 
     const type = this.conductorTypeSelect.value;
     const alpha = this.conductors[type]?.alpha || 0.0000189;
+    const name = this.conductors[type]?.name || "Custom";
 
     return {
       numPoints: 96,
@@ -190,6 +179,7 @@ export class UIManager {
       hTension,
       mode,
       alpha,
+      name,
       loadHeating,
     };
   }

@@ -15,7 +15,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
   const hTension = options.hTension ?? 15000; // N (horizontal component)
   const mode = options.mode ?? "physics"; // physics | length | sag
 
-  // Build a stable local frame (ENU) around the midpoint
+  //build a stable local frame (ENU) around the midpoint
   const mid = Cartesian3.midpoint(startPos, endPos, new Cartesian3());
   const enu = Transforms.eastNorthUpToFixedFrame(mid);
   const invEnu = Matrix4.inverse(enu, new Matrix4());
@@ -23,7 +23,6 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
   const p0 = Matrix4.multiplyByPoint(invEnu, startPos, new Cartesian3());
   const p1 = Matrix4.multiplyByPoint(invEnu, endPos, new Cartesian3());
 
-  // Align horizontal baseline along local X-Y plane; vertical is Z
   const dx = p1.x - p0.x;
   const dy = p1.y - p0.y;
   const L = Math.hypot(dx, dy);
@@ -37,22 +36,56 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
   const dz = z1 - z0;
   const chordLen = Math.hypot(L, dz);
 
-  // Helper: build positions from catenary params (a,b,c)
   function buildPositionsFromParams(a, b, c) {
     const positions = [];
+    let minZ = Number.POSITIVE_INFINITY;
+    let maxZ = Number.NEGATIVE_INFINITY;
+
     for (let i = 0; i <= numPoints; i++) {
       const t = i / numPoints;
       const x = t * L;
       const z = a * Math.cosh((x - b) / a) + c;
+
+      // Track min/max Z relative to local frame
+      if (z < minZ) {
+        minZ = z;
+      }
+      if (z > maxZ) {
+        maxZ = z;
+      }
+
       const xLocal = p0.x + dirX * x;
       const yLocal = p0.y + dirY * x;
       const local = new Cartesian3(xLocal, yLocal, z);
       positions.push(Matrix4.multiplyByPoint(enu, local, new Cartesian3()));
     }
+
+    // Calculate Sag (approximate as max vertical distance from chord)
+    // Chord Z at x is z0 + (z1-z0)*t
+    // But simpler: Sag is roughly (z0 + z1)/2 - minZ for level spans.
+    // For inclined spans, it's the max vertical distance from the chord.
+    let maxSag = 0;
+    for (let i = 0; i <= numPoints; i++) {
+      const t = i / numPoints;
+      const x = t * L;
+      const zCurve = a * Math.cosh((x - b) / a) + c;
+      const zChord = z0 + (z1 - z0) * t;
+      const sag = zChord - zCurve;
+      if (sag > maxSag) {
+        maxSag = sag;
+      }
+    }
+
+    positions.metadata = {
+      a: a,
+      sag: maxSag,
+      hTension: a * linearWeight, // H = a * w
+      linearWeight: linearWeight,
+    };
+
     return positions;
   }
 
-  // Mode: physics — compute a from H/w; solve b from endpoints; auto length
   if (mode === "physics") {
     const a = hTension / Math.max(1e-6, linearWeight);
     // Solve b so that z(L) - z(0) = dz
@@ -98,14 +131,12 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
     return buildPositionsFromParams(a, b, c);
   }
 
-  // Mode: length — solve a to match cable length, then b,c
   if (
     mode === "length" &&
     typeof lengthMeters === "number" &&
     isFinite(lengthMeters) &&
     lengthMeters > 0
   ) {
-    // If requested length is shorter than straight chord, clamp
     const S = Math.max(lengthMeters, chordLen + 1e-6);
     const D = dz;
 
@@ -160,16 +191,12 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       return S_pred - S;
     };
 
-    // Bracket a
-    // Start with a safe range to avoid cosh overflow (L/a < 700)
     let aLo = Math.max(L / 600, 0.1);
     let aHi = L * 1000;
 
     let fLo = lengthResidual(aLo);
     let fHi = lengthResidual(aHi);
 
-    // Helper to check if signs are different (bracketing root)
-    // We treat +Infinity as positive.
     const hasBracket = (v1, v2) => {
       if (v1 === Number.POSITIVE_INFINITY && v2 < 0) {
         return true;
@@ -177,7 +204,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       if (v2 === Number.POSITIVE_INFINITY && v1 < 0) {
         return true;
       }
-      return v1 * v2 < 0; // Standard sign check
+      return v1 * v2 < 0;
     };
 
     let guard = 0;
@@ -188,15 +215,10 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       if (fLo > 0 && fHi > 0) {
         aHi *= 2;
         fHi = lengthResidual(aHi);
-      }
-      // If both negative (Length < S), it means even aLo is too large (too short). We need smaller aLo.
-      else if (fLo < 0 && fHi < 0) {
+      } else if (fLo < 0 && fHi < 0) {
         aLo *= 0.5;
         fLo = lengthResidual(aLo);
-      }
-      // If one is NaN or something weird
-      else {
-        // Try expanding both
+      } else {
         aLo *= 0.5;
         aHi *= 2;
         fLo = lengthResidual(aLo);
@@ -210,8 +232,6 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
         "Catenary solver failed to bracket 'a'. Falling back to sag ratio.",
         { S, L, aLo, aHi, fLo, fHi },
       );
-      // Fallback to sag-based if we failed to bracket
-      // eslint-disable-next-line no-use-before-define
       return createSagBased();
     }
     // Solve a by bisection
@@ -221,13 +241,10 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       if (Math.abs(f) < 1e-4) {
         break;
       }
-      // Handle Infinity in bisection
       if (f === Number.POSITIVE_INFINITY) {
-        // Treat as positive value -> root is to the right (larger a)
         aLo = a;
         fLo = f;
       } else if (f * fLo < 0) {
-        // Standard sign check
         aHi = a;
         fHi = f;
       } else {
@@ -238,14 +255,12 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
     }
     const b = solveBForA(a);
     if (b === null) {
-      // eslint-disable-next-line no-use-before-define
       return createSagBased();
     }
     const c = z0 - a * Math.cosh(-b / a);
     return buildPositionsFromParams(a, b, c);
   }
 
-  // Sag-based (no cable length provided): target sag at mid-span
   function createSagBased() {
     const lineMid = z0 + dz / 2;
     function solveP(a) {
@@ -324,7 +339,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       expand++;
     }
     if (fLo * fHi > 0 || !isFinite(fLo) || !isFinite(fHi)) {
-      // last resort: simple parabola
+      //last resort: simple parabola
       const positions = [];
       for (let i = 0; i <= numPoints; i++) {
         const t = i / numPoints;
@@ -356,7 +371,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
     }
     const p = solveP(a);
     if (p === null) {
-      // last resort: simple parabola again
+      //last resort: simple parabola again
       const positions = [];
       for (let i = 0; i <= numPoints; i++) {
         const t = i / numPoints;

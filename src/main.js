@@ -1,7 +1,6 @@
 import {
   Viewer,
   Ion,
-  IonGeocodeProviderType,
   createGooglePhotorealistic3DTileset,
   JulianDate,
   ClockRange,
@@ -20,12 +19,12 @@ const viewer = new Viewer("cesiumContainer", {
   baseLayerPicker: false,
   homeButton: false,
   navigationHelpButton: false,
-  timeline: true, // Enable timeline for weather simulation
-  animation: true, // Enable animation controls
+  timeline: true,
+  animation: true,
   fullscreenButton: false,
   sceneModePicker: false,
   selectionIndicator: false,
-  geocoder: IonGeocodeProviderType.GOOGLE,
+  geocoder: false,
   globe: false,
 });
 
@@ -38,7 +37,7 @@ viewer.clock.startTime = start.clone();
 viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
 viewer.clock.clockRange = ClockRange.LOOP_STOP;
-viewer.clock.multiplier = 3600 * 24; // 1 day per second
+viewer.clock.multiplier = 3600 * 24; //1 day per second
 viewer.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
 viewer.timeline.zoomTo(start, stop);
 
@@ -62,4 +61,21 @@ try {
   viewer.scene.primitives.add(tileset);
 } catch (error) {
   console.log(`Failed to load tileset: ${error}`);
+}
+
+const loadingOverlay = document.getElementById("loadingOverlay");
+if (loadingOverlay) {
+  loadingOverlay.style.opacity = "0";
+  setTimeout(() => {
+    loadingOverlay.style.display = "none";
+  }, 500);
+}
+
+const toolbar = document.getElementById("toolbar");
+const controls = document.getElementById("lineControls");
+if (toolbar) {
+  toolbar.style.display = "";
+}
+if (controls) {
+  controls.style.display = "";
 }

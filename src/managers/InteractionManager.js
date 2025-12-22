@@ -7,6 +7,9 @@ import {
   Cartesian3,
   Cartographic,
   CallbackProperty,
+  Cartesian2,
+  VerticalOrigin,
+  DistanceDisplayCondition,
 } from "cesium";
 import { createTransmissionLine } from "../utils/catenary.js";
 
@@ -20,7 +23,7 @@ export class InteractionManager {
     this.selectedObjects = [];
     this.placeMode = false;
     this.connectMode = false;
-    this.lines = []; // Store created lines to update them
+    this.lines = [];
 
     this.initialize();
   }
@@ -139,9 +142,6 @@ export class InteractionManager {
 
     const options = this.uiManager.getLineOptions();
 
-    // Calculate initial unstressed length at 20°C (Reference Temp)
-    // We use the "physics" mode to solve for the initial shape, then calculate its arc length.
-    // This arc length becomes our L_ref.
     const initialPositions = createTransmissionLine(
       entity1OffsetPos,
       entity2OffsetPos,
@@ -163,12 +163,18 @@ export class InteractionManager {
       refLength: initialLength,
       refTemp: 20,
       alpha: options.alpha,
-      options: { ...options, mode: "length" }, // Switch to length mode for updates
+      options: { ...options, mode: "length" },
       lastTemp: null,
     };
 
-    // Create dynamic entity
+    const midPoint = Cartesian3.midpoint(
+      entity1OffsetPos,
+      entity2OffsetPos,
+      new Cartesian3(),
+    );
+
     this.viewer.entities.add({
+      position: midPoint,
       polyline: {
         positions: new CallbackProperty((time) => {
           return this.updateLineGeometry(lineData, time);
@@ -181,6 +187,24 @@ export class InteractionManager {
         ),
         clampToGround: false,
       },
+      label: {
+        text: new CallbackProperty(() => {
+          const temp = lineData.lastTemp !== null ? lineData.lastTemp : 20;
+          const meta = lineData.lastMetadata || {};
+          const sag = meta.sag ? meta.sag.toFixed(2) : "0.00";
+          const tension = meta.hTension ? Math.round(meta.hTension) : 0;
+          const name = lineData.options.name || "Conductor";
+
+          return `${name}\nTemp: ${temp.toFixed(1)}°C\nSag: ${sag} m\nTension: ${tension} N`;
+        }, false),
+        font: "14px monospace",
+        fillColor: Color.WHITE,
+        showBackground: true,
+        backgroundColor: new Color(0.1, 0.1, 0.1, 0.7),
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        pixelOffset: new Cartesian2(0, -20),
+        distanceDisplayCondition: new DistanceDisplayCondition(0, 3000),
+      },
     });
 
     this.lines.push(lineData);
@@ -192,18 +216,12 @@ export class InteractionManager {
   }
 
   getLineColor(temp) {
-    // Gradient: Blue (Cold) -> White (20C) -> Red (Hot)
-    // Cold range: -10 to 20
-    // Hot range: 20 to 100
-
     if (temp <= 20) {
-      // Interpolate Blue to White
       let t = (temp - -10) / (20 - -10);
       t = Math.max(0, Math.min(1, t));
       return new Color(t, t, 1, 1.0);
     }
 
-    // Interpolate White to Red
     let t = (temp - 20) / (100 - 20);
     t = Math.max(0, Math.min(1, t));
     return new Color(1, 1 - t, 1 - t, 1.0);
@@ -212,10 +230,8 @@ export class InteractionManager {
   updateLineGeometry(lineData, time) {
     const ambientTemp = this.weatherManager.getTemperatureAtTime(time);
 
-    // Get current load heating setting (dynamic)
     const loadHeating = parseFloat(this.uiManager.loadHeatingInput?.value || 0);
 
-    // Robustly get multiplier
     let multiplier = 1;
     if (this.uiManager.thermalMultiplierInput) {
       multiplier = parseFloat(this.uiManager.thermalMultiplierInput.value);
@@ -231,7 +247,6 @@ export class InteractionManager {
 
     const totalTemp = ambientTemp + loadHeating;
 
-    // Optimization: Only re-calculate if temp changed significantly
     if (
       lineData.lastTemp !== null &&
       Math.abs(totalTemp - lineData.lastTemp) < 0.1 &&
@@ -240,8 +255,7 @@ export class InteractionManager {
       return lineData.lastPositions;
     }
 
-    // Thermal Expansion: L = L_ref * (1 + alpha * (T - T_ref))
-    // Apply multiplier to the thermal strain
+    //thermal Expansion: L = L_ref * (1 + alpha * (T - T_ref))
     const alpha = lineData.alpha || 0.00002061;
     const newLength =
       lineData.refLength *
@@ -251,7 +265,6 @@ export class InteractionManager {
       `[Interaction] Temp: ${totalTemp.toFixed(1)}, Mult: ${multiplier}, Alpha: ${alpha}, RefLen: ${lineData.refLength.toFixed(3)}, NewLen: ${newLength.toFixed(3)}`,
     );
 
-    // Update options with new length
     lineData.options.lengthMeters = newLength;
 
     const positions = createTransmissionLine(
@@ -263,6 +276,7 @@ export class InteractionManager {
     lineData.lastPositions = positions;
     lineData.lastTemp = totalTemp;
     lineData.lastMultiplier = multiplier;
+    lineData.lastMetadata = positions.metadata;
 
     return positions;
   }
