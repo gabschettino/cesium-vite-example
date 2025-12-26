@@ -10,9 +10,7 @@ export class UIManager {
     this.rtsStrengthInput = document.getElementById("rtsStrength");
     this.loadHeatingInput = document.getElementById("loadHeating");
     this.loadHeatingVal = document.getElementById("loadHeatingVal");
-    this.thermalMultiplierInput = document.getElementById("thermalMultiplier");
-    this.thermalMultiplierVal = document.getElementById("thermalMultiplierVal");
-
+    this.dynamicLoadCheckbox = document.getElementById("dynamicLoad");
     this.geometricInputs = document.getElementById("geometricInputs");
     this.sagInputGroup = document.getElementById("sagInputGroup");
     this.lengthInputGroup = document.getElementById("lengthInputGroup");
