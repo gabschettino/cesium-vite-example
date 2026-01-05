@@ -26,9 +26,9 @@ const viewer = new Viewer("cesiumContainer", {
   sceneModePicker: false,
   selectionIndicator: false,
   geocoder: false,
-  globe: false,
 });
 
+viewer.scene.globe.enableLighting = true;
 viewer.scene.skyAtmosphere.show = true;
 
 // Configure Clock for Simulation
@@ -61,7 +61,7 @@ try {
   });
   viewer.scene.primitives.add(tileset);
 } catch (error) {
-  console.log(`Failed to load tileset: ${error}`);
+  // Failed to load tileset
 }
 
 const loadingOverlay = document.getElementById("loadingOverlay");

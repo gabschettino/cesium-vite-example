@@ -89,13 +89,11 @@ export class InteractionManager {
         const lon = (cartographic.longitude * 180) / Math.PI;
 
         // Show loading indicator (simple console log for now, could be UI toast)
-        console.log("Fetching weather data...");
         document.body.style.cursor = "wait";
 
         await this.weatherManager.fetchWeatherData(lat, lon);
 
         document.body.style.cursor = "default";
-        console.log("Weather data ready.");
       }
       return entity;
     } catch (err) {
@@ -236,9 +234,6 @@ export class InteractionManager {
 
     this.lines.push(lineData);
 
-    console.log(
-      `Transmission line created. Ref Length: ${initialLength.toFixed(2)}m @ 20°C`,
-    );
     this.resetMode();
   }
 
@@ -385,10 +380,6 @@ export class InteractionManager {
     const newLength =
       lineData.refLength *
       (1 + alpha * (totalTemp - lineData.refTemp) * multiplier);
-
-    console.log(
-      `[Interaction] Temp: ${totalTemp.toFixed(1)}, Mult: ${multiplier}, Alpha: ${alpha}, RefLen: ${lineData.refLength.toFixed(3)}, NewLen: ${newLength.toFixed(3)}`,
-    );
 
     lineData.options.lengthMeters = newLength;
 

@@ -28,9 +28,6 @@ export class WeatherManager {
         minTemps: new Float32Array(data.daily.temperature_2m_min),
       };
 
-      console.log(
-        `Loaded ${this.weatherData.maxTemps.length} days of weather data.`,
-      );
       return true;
     } catch (error) {
       console.error("Failed to fetch weather data:", error);

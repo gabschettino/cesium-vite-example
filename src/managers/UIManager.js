@@ -24,6 +24,10 @@ export class UIManager {
     this.placeObjectBtn = document.getElementById("placeObjectBtn");
     this.connectObjectsBtn = document.getElementById("connectObjectsBtn");
 
+    this.lineControlsHeader = document.getElementById("lineControlsHeader");
+    this.lineControlsContent = document.getElementById("lineControlsContent");
+    this.lineControlsToggle = document.getElementById("lineControlsToggle");
+
     this.conductors = {
       drake: {
         name: "ACSR Drake",
@@ -80,9 +84,14 @@ export class UIManager {
     this.loadHeatingInput.addEventListener("input", () => {
       this.loadHeatingVal.textContent = `${this.loadHeatingInput.value}°C`;
     });
-    this.thermalMultiplierInput.addEventListener("input", () => {
-      this.thermalMultiplierVal.textContent = `${this.thermalMultiplierInput.value}x`;
-    });
+
+    if (this.lineControlsHeader && this.lineControlsContent) {
+      this.lineControlsHeader.addEventListener("click", () => {
+        const isHidden = this.lineControlsContent.style.display === "none";
+        this.lineControlsContent.style.display = isHidden ? "block" : "none";
+        this.lineControlsToggle.textContent = isHidden ? "▲" : "▼";
+      });
+    }
   }
 
   setupEventListeners({ onPlace, onConnect }) {
