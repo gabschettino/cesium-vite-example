@@ -1,124 +1,264 @@
-body {
+﻿body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow: hidden;
+  display: flex;
+  height: 100vh;
+  background: #000;
+}
+
+#leftPanel {
+  width: 380px;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  z-index: 1000;
+  pointer-events: none; /* Let clicks pass through empty areas if any */
+}
+
+/* Allow interaction with children */
+.action-rail, .cesium-panel {
+  pointer-events: auto;
 }
 
 #cesiumContainer {
   background: #000;
-  height: 100vh;
-  width: 100%;
+  flex-grow: 1;
+  width: auto;
+  height: 100%;
 }
 
-/* Toolbar */
-.cesium-toolbar {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 100;
+/* --- Action Rail --- */
+.action-rail {
+  width: 60px;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
-  gap: 10px;
-  background: rgba(42, 42, 42, 0.85);
-  padding: 8px;
-  border-radius: 8px;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.cesium-button {
-  background: rgba(60, 60, 60, 0.6);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  padding-top: 24px;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
-.cesium-button:hover {
-  background: rgba(80, 80, 80, 0.8);
-  border-color: rgba(255, 255, 255, 0.5);
+.rail-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #aaa;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 0;
+  overflow: hidden;
+}
+
+.rail-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rail-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.cesium-button:active {
-  transform: translateY(0);
-  background: rgba(100, 100, 100, 0.8);
+.rail-button.active {
+  background: rgba(79, 172, 254, 0.15);
+  color: #4facfe;
+  border-color: rgba(79, 172, 254, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
 }
 
-.icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-/* Panel */
+/* --- Main Content Panel --- */
 .cesium-panel {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 100;
-  background: rgba(42, 42, 42, 0.9);
-  color: #eee;
-  padding: 20px;
-  border-radius: 8px;
-  width: 280px;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  flex-grow: 1;
+  background: rgba(25, 25, 25, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-header {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 24px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  letter-spacing: 0.5px;
 }
 
+/* --- Controls --- */
 .control-group {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+/* Floating Toolbar */
+.floating-toolbar {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 220px;
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 12px;
+    z-index: 2000;
+    color: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.drag-handle {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4facfe;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 6px;
+    font-weight: 600;
+    cursor: default;
+}
+
+.tool-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.tool-row label {
+    font-size: 12px;
+    color: #ccc;
+    width: 50px;
+}
+
+.dpad {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dpad-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dpad button {
+    width: 30px;
+    height: 30px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dpad button:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.dpad button:active {
+    background: rgba(79, 172, 254, 0.4);
+}
+
+.pick-result {
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .control-group label {
-  font-size: 12px;
+  font-size: 11px;
   color: #bbb;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.cesium-input {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+/* Segmented Control */
+.segmented-control {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.segment-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 8px 0;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.segment-btn:hover {
+  color: #ddd;
+}
+
+.segment-btn.active {
+  background: rgba(255,255,255,0.1);
   color: #fff;
-  padding: 8px 12px;
-  border-radius: 4px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Input Styles */
+.cesium-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 6px;
   font-size: 13px;
   width: 100%;
   box-sizing: border-box;
   transition: all 0.2s;
+  font-family: monospace; /* Align numbers better */
 }
 
 .cesium-input:hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .cesium-input:focus {
   outline: none;
   border-color: #4facfe;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .cesium-input option {
@@ -126,11 +266,199 @@ body {
   color: #fff;
 }
 
+/* Remove arrows/spinners from number inputs */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Grid Layout */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  row-gap: 16px;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grid-item label {
+  font-size: 11px;
+  color: #bbb;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.full-width {
+  grid-column: span 2;
+}
+
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-unit input {
+  padding-right: 40px;
+}
+
+.unit-suffix {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  pointer-events: none;
+  font-weight: 500;
+}
+
+/* Toggles */
+.section-divider {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #ddd;
+  font-weight: 500;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255,255,255,0.1);
+  transition: .3s;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: rgba(255,255,255,0.9);
+  transition: .3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+  background-color: #4facfe; /* Active color */
+  border-color: #4facfe;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Checkbox specific color for safety */
+#showSafetyZone:checked + .slider {
+    background-color: #ff5252; /* Red for warning */
+    border-color: #ff5252;
+}
+
+/* Load Profile */
+.load-profile-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Slider Controls */
+.slider-control {
+  background: rgba(255,255,255,0.03);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #bbb;
+  margin-bottom: 10px;
+}
+
+.range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  margin-top: -6px; /* center thumb */
+}
+
+.range-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+/* Footer */
 .panel-footer {
-  margin-top: 20px;
-  padding-top: 12px;
+  margin-top: auto;
+  padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 11px;
-  color: #888;
-  line-height: 1.5;
+  color: #666;
+  text-align: center;
 }

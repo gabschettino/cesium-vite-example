@@ -1,7 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="assets/faviconV2.png" />
     <title>Transmission Line Calc</title>
   </head>
   <body>
@@ -27,189 +28,228 @@
       <h2 style="margin-bottom: 10px">Initializing Cesium...</h2>
     </div>
 
-    <div id="toolbar" class="cesium-toolbar" style="display: none">
-      <button id="placeObjectBtn" class="cesium-button">
-        <span class="icon">📍</span> Place Tower
-      </button>
-      <button id="connectObjectsBtn" class="cesium-button">
-        <span class="icon">🔗</span> Connect Lines
-      </button>
+    <div id="leftPanel">
+      <!-- Action Rail -->
+      <div class="action-rail">
+        <button id="toolPlace" class="rail-button" title="Place Tower">
+          <img src="assets/place.png" alt="Place Tower" />
+        </button>
+        <button id="toolConnect" class="rail-button" title="Connect Lines">
+          <img src="assets/connect.png" alt="Connect Lines" />
+        </button>
+      </div>
+
+      <!-- Content Area -->
+      <div id="lineControls" class="cesium-panel">
+        <div class="panel-header" id="lineControlsHeader">
+          <span>Line Parameters</span>
+        </div>
+
+        <div id="lineControlsContent">
+          <!-- Segmented Control for Mode -->
+          <div class="control-group">
+            <label>Calculation Mode</label>
+            <div class="segmented-control" id="lineModeControl">
+              <button class="segment-btn active" data-value="physics">
+                Physics
+              </button>
+              <button class="segment-btn" data-value="sag">Sag</button>
+              <button class="segment-btn" data-value="length">Length</button>
+            </div>
+            <!-- Hidden select for compatibility -->
+            <select id="lineMode" style="display: none">
+              <option value="physics" selected>Physics</option>
+              <option value="sag">Sag Ratio</option>
+              <option value="length">Cable Length</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label>Conductor Type</label>
+            <div class="select-wrapper">
+              <select id="conductorType" class="cesium-input">
+                <option value="custom">Custom Configuration</option>
+                <option value="drake" selected>ACSR Drake (795)</option>
+                <option value="cardinal">ACSR Cardinal (954)</option>
+                <option value="curlew">ACSR Curlew (1033)</option>
+                <option value="bluejay">ACSR Bluejay (1113)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Physics Inputs -->
+          <div id="physicsInputs">
+            <!-- Compact Grid -->
+            <div class="input-grid">
+              <div class="grid-item">
+                <label>Voltage</label>
+                <div class="input-with-unit">
+                  <input
+                    id="systemVoltage"
+                    class="cesium-input"
+                    type="number"
+                    step="10"
+                    min="0"
+                    value="138"
+                  />
+                  <span class="unit-suffix">kV</span>
+                </div>
+              </div>
+              <div class="grid-item">
+                <label>Design Tension</label>
+                <div class="input-with-unit">
+                  <input
+                    id="tensionPct"
+                    class="cesium-input"
+                    type="number"
+                    step="1"
+                    min="1"
+                    max="60"
+                    value="20"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+              </div>
+              <div class="grid-item">
+                <label>Horiz. Tension</label>
+                <div class="input-with-unit">
+                  <input
+                    id="hTension"
+                    class="cesium-input"
+                    type="number"
+                    step="100"
+                    min="0"
+                  />
+                  <span class="unit-suffix">N</span>
+                </div>
+              </div>
+              <div class="grid-item">
+                <label>Linear Weight</label>
+                <div class="input-with-unit">
+                  <input
+                    id="linearWeight"
+                    class="cesium-input"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                  />
+                  <span class="unit-suffix">N/m</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-group" style="margin-top: 10px">
+              <label>Rated Tensile Strength (RTS)</label>
+              <div class="input-with-unit full-width">
+                <input
+                  id="rtsStrength"
+                  class="cesium-input"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  readonly
+                  style="
+                    background: rgba(255, 255, 255, 0.05);
+                    color: #aaa;
+                    border-color: transparent;
+                  "
+                />
+                <span class="unit-suffix">kN</span>
+              </div>
+            </div>
+
+            <div class="control-group section-divider">
+              <label>Environment & Load</label>
+
+              <!-- Safety Zone Toggle -->
+              <div class="toggle-row">
+                <span>Safety Zone</span>
+                <label class="switch">
+                  <input type="checkbox" id="showSafetyZone" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <!-- Dynamic Load Toggle -->
+              <div class="toggle-row">
+                <span>Simulate Daily Load</span>
+                <label class="switch">
+                  <input type="checkbox" id="dynamicLoad" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div
+                id="loadProfileContainer"
+                class="load-profile-container"
+                style="display: none"
+              >
+                <canvas id="loadProfileCanvas" width="150" height="60"></canvas>
+              </div>
+
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label>Elec. Heating</label>
+                  <span id="loadHeatingVal">0°C</span>
+                </div>
+                <input
+                  id="loadHeating"
+                  class="range-slider"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="0"
+                  step="1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Geometric Inputs -->
+          <div id="geometricInputs" style="display: none">
+            <!-- Reusing grid for consistent look -->
+            <div class="input-grid">
+              <div class="grid-item full-width" id="sagInputGroup">
+                <label>Sag Ratio (S/L)</label>
+                <input
+                  id="sagRatio"
+                  class="cesium-input"
+                  type="number"
+                  step="0.005"
+                  min="0"
+                  max="0.5"
+                  value="0.06"
+                />
+              </div>
+              <div
+                class="grid-item full-width"
+                id="lengthInputGroup"
+                style="display: none"
+              >
+                <label>Cable Length (m)</label>
+                <input
+                  id="cableLength"
+                  class="cesium-input"
+                  type="number"
+                  step="1"
+                  min="0"
+                  placeholder="auto"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <div id="catenaryConstantDisplay">H/w: - m</div>
+          </div>
+        </div>
+        <!-- End of lineControlsContent -->
+      </div>
     </div>
+    <!-- End of leftPanel -->
 
     <div id="cesiumContainer"></div>
 
-    <div id="lineControls" class="cesium-panel" style="display: none">
-      <div
-        class="panel-header"
-        id="lineControlsHeader"
-        style="
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        "
-      >
-        <span>Line Parameters</span>
-        <span id="lineControlsToggle">▼</span>
-      </div>
-
-      <div id="lineControlsContent" style="display: none">
-        <div class="control-group">
-          <label>Calculation Mode:</label>
-          <select id="lineMode" class="cesium-input">
-            <option value="physics" selected>Physics (Tension & Weight)</option>
-            <option value="sag">Sag Ratio (Geometric)</option>
-            <option value="length">Cable Length (Geometric)</option>
-          </select>
-        </div>
-
-        <div class="control-group">
-          <label>Conductor Type:</label>
-          <select id="conductorType" class="cesium-input">
-            <option value="custom">Custom</option>
-            <option value="drake" selected>ACSR Drake (795 kcmil)</option>
-            <option value="cardinal">ACSR Cardinal (954 kcmil)</option>
-            <option value="curlew">ACSR Curlew (1033 kcmil)</option>
-            <option value="bluejay">ACSR Bluejay (1113 kcmil)</option>
-          </select>
-        </div>
-
-        <!-- Physics Inputs -->
-        <div id="physicsInputs">
-          <div class="control-group">
-            <label>Design Tension (% RTS):</label>
-            <div style="display: flex; gap: 8px">
-              <input
-                id="tensionPct"
-                class="cesium-input"
-                type="number"
-                step="1"
-                min="1"
-                max="60"
-                value="20"
-              />
-              <span style="align-self: center; font-size: 12px; color: #aaa"
-                >%</span
-              >
-            </div>
-          </div>
-
-          <div class="control-group">
-            <label>Horizontal Tension (N):</label>
-            <input
-              id="hTension"
-              class="cesium-input"
-              type="number"
-              step="100"
-              min="0"
-            />
-          </div>
-
-          <div class="control-group">
-            <label>Linear Weight (N/m):</label>
-            <input
-              id="linearWeight"
-              class="cesium-input"
-              type="number"
-              step="0.01"
-              min="0"
-            />
-          </div>
-
-          <div class="control-group">
-            <label>Rated Tensile Strength (kN):</label>
-            <input
-              id="rtsStrength"
-              class="cesium-input"
-              type="number"
-              step="0.1"
-              min="0"
-              readonly
-              style="background: rgba(0, 0, 0, 0.2); color: #888"
-            />
-          </div>
-
-          <div class="control-group">
-            <label>Electrical Load Heating (°C):</label>
-            <div style="margin-bottom: 5px">
-              <label
-                style="
-                  font-size: 12px;
-                  display: flex;
-                  align-items: center;
-                  gap: 5px;
-                  cursor: pointer;
-                "
-              >
-                <input type="checkbox" id="dynamicLoad" />
-                Simulate Daily Load Profile
-              </label>
-            </div>
-            <div style="display: flex; gap: 8px">
-              <input
-                id="loadHeating"
-                class="cesium-input"
-                type="range"
-                min="0"
-                max="100"
-                value="0"
-                step="1"
-              />
-              <span
-                id="loadHeatingVal"
-                style="
-                  align-self: center;
-                  font-size: 12px;
-                  color: #fff;
-                  width: 30px;
-                "
-                >0°C</span
-              >
-            </div>
-            <small style="color: #888; font-size: 10px"
-              >Simulates temp rise due to current.</small
-            >
-          </div>
-        </div>
-
-        <!-- Geometric Inputs -->
-        <div id="geometricInputs" style="display: none">
-          <div class="control-group" id="sagInputGroup">
-            <label>Sag ratio (S/L):</label>
-            <input
-              id="sagRatio"
-              class="cesium-input"
-              type="number"
-              step="0.005"
-              min="0"
-              max="0.5"
-              value="0.06"
-            />
-          </div>
-          <div
-            class="control-group"
-            id="lengthInputGroup"
-            style="display: none"
-          >
-            <label>Cable length (m):</label>
-            <input
-              id="cableLength"
-              class="cesium-input"
-              type="number"
-              step="1"
-              min="0"
-              placeholder="auto"
-            />
-          </div>
-        </div>
-
-        <div class="panel-footer">
-          <div id="catenaryConstantDisplay">H/w: - m</div>
-          <small>Standard ACSR properties used.</small>
-        </div>
-      </div>
-      <!-- End of lineControlsContent -->
-    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

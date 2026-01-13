@@ -8,8 +8,8 @@ export class WeatherManager {
   }
 
   async fetchWeatherData(latitude, longitude) {
-    const start = "2023-01-01";
-    const end = "2023-12-30";
+    const start = "2025-01-01";
+    const end = "2025-12-30";
 
     //fetch daily min/max temp
     const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${start}&end_date=${end}&daily=temperature_2m_max,temperature_2m_min`;

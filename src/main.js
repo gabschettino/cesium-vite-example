@@ -31,9 +31,9 @@ const viewer = new Viewer("cesiumContainer", {
 viewer.scene.globe.enableLighting = true;
 viewer.scene.skyAtmosphere.show = true;
 
-// Configure Clock for Simulation
-const start = JulianDate.fromIso8601("2023-01-01T00:00:00Z");
-const stop = JulianDate.fromIso8601("2023-12-31T23:59:59Z");
+//configure clock
+const start = JulianDate.fromIso8601("2025-01-01T00:00:00Z");
+const stop = JulianDate.fromIso8601("2025-12-31T23:59:59Z");
 viewer.clock.startTime = start.clone();
 viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
@@ -53,6 +53,7 @@ const interactionManager = new InteractionManager(
 uiManager.setupEventListeners({
   onPlace: () => interactionManager.enablePlaceMode(),
   onConnect: () => interactionManager.enableConnectMode(),
+  onCursor: () => interactionManager.resetMode(),
 });
 
 try {
@@ -61,7 +62,7 @@ try {
   });
   viewer.scene.primitives.add(tileset);
 } catch (error) {
-  // Failed to load tileset
+  //failed to load tileset
 }
 
 const loadingOverlay = document.getElementById("loadingOverlay");
@@ -81,9 +82,7 @@ if (controls) {
   controls.style.display = "";
 }
 
-// Initial Scene Setup
 async function setupInitialScene() {
-  // 1. Set Camera View (Rio de Janeiro)
   viewer.camera.setView({
     destination: Cartesian3.fromDegrees(-43.169665, -22.962251, 273.32),
     orientation: {
@@ -93,7 +92,6 @@ async function setupInitialScene() {
     },
   });
 
-  // 2. Place 3 Towers (Rio de Janeiro)
   const t1Pos = Cartesian3.fromDegrees(-43.162677, -22.963348, 130.06);
   const t2Pos = Cartesian3.fromDegrees(-43.162133, -22.960038, 126.96);
   const t3Pos = Cartesian3.fromDegrees(-43.16682, -22.95864, 174.56);
@@ -102,7 +100,6 @@ async function setupInitialScene() {
   const t2 = await interactionManager.placeTower(t2Pos);
   const t3 = await interactionManager.placeTower(t3Pos);
 
-  // 3. Connect Towers
   if (t1 && t2) {
     interactionManager.createConnection(t1, t2);
   }

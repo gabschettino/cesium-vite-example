@@ -1,7 +1,7 @@
 import { Cartesian3, Transforms, Matrix4 } from "cesium";
 
 /**
- * Function to create a true catenary between two supports (handles uneven heights)
+ * Function to create a true catenary between two supports (assuming always uneven heights) (done with help of AI)
  * @param {Cartesian3} startPos
  * @param {Cartesian3} endPos
  * @param {Object} options
@@ -9,13 +9,12 @@ import { Cartesian3, Transforms, Matrix4 } from "cesium";
  */
 export function createTransmissionLine(startPos, endPos, options = {}) {
   const numPoints = options.numPoints ?? 64;
-  const sagRatio = options.sagRatio ?? 0.06; // used in sag mode
-  const lengthMeters = options.lengthMeters; // optional: total cable length (length mode)
-  const linearWeight = options.linearWeight ?? 30; // N/m
-  const hTension = options.hTension ?? 15000; // N (horizontal component)
-  const mode = options.mode ?? "physics"; // physics | length | sag
+  const sagRatio = options.sagRatio ?? 0.06; //sag mode
+  const lengthMeters = options.lengthMeters; //length mode
+  const linearWeight = options.linearWeight ?? 30;
+  const hTension = options.hTension ?? 15000;
+  const mode = options.mode ?? "physics";
 
-  //build a stable local frame (ENU) around the midpoint
   const mid = Cartesian3.midpoint(startPos, endPos, new Cartesian3());
   const enu = Transforms.eastNorthUpToFixedFrame(mid);
   const invEnu = Matrix4.inverse(enu, new Matrix4());
@@ -46,7 +45,6 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       const x = t * L;
       const z = a * Math.cosh((x - b) / a) + c;
 
-      // Track min/max Z relative to local frame
       if (z < minZ) {
         minZ = z;
       }
@@ -63,7 +61,6 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
     // Calculate Sag (approximate as max vertical distance from chord)
     // Chord Z at x is z0 + (z1-z0)*t
     // But simpler: Sag is roughly (z0 + z1)/2 - minZ for level spans.
-    // For inclined spans, it's the max vertical distance from the chord.
     let maxSag = 0;
     for (let i = 0; i <= numPoints; i++) {
       const t = i / numPoints;

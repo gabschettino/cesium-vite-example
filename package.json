@@ -1,5 +1,5 @@
 {
-  "name": "cesiumjs-vite-example",
+  "name": "ccd-project",
   "version": "1.0.0",
   "description": "The minimal recommended setup for an app using Cesium with Vite.",
   "homepage": "https://cesium.com/platform/cesiumjs/",
