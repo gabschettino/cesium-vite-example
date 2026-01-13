@@ -13,6 +13,11 @@ export default defineConfig({
     // https://vitejs.dev/config/shared-options.html#define
     CESIUM_BASE_URL: JSON.stringify(`/${cesiumBaseUrl}`),
   },
+  resolve: {
+    alias: {
+      "@zip.js/zip.js/lib/zip-no-worker.js": "@zip.js/zip.js",
+    },
+  },
   plugins: [
     // Copy Cesium Assets, Widgets, and Workers to a static directory.
     // If you need to add your own static files to your project, use the `public` directory
