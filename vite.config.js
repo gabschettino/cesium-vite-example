@@ -8,10 +8,12 @@ const cesiumBaseUrl = "cesiumStatic";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/ccd-project/",
+
   define: {
     // Define relative base path in cesium for loading assets
     // https://vitejs.dev/config/shared-options.html#define
-    CESIUM_BASE_URL: JSON.stringify(`/${cesiumBaseUrl}`),
+    CESIUM_BASE_URL: JSON.stringify(`/ccd-project/${cesiumBaseUrl}`),
   },
   resolve: {
     alias: {

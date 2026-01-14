@@ -83,6 +83,7 @@ if (controls) {
 }
 
 async function setupInitialScene() {
+  //aerial view of three towers in Rio de Janeiro, Brazil
   viewer.camera.setView({
     destination: Cartesian3.fromDegrees(-43.169665, -22.962251, 273.32),
     orientation: {

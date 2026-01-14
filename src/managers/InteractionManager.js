@@ -20,7 +20,7 @@ import {
 import { createTransmissionLine } from "../utils/catenary.js";
 import { TransformGizmo } from "../utils/TransformGizmo.js";
 
-//Tower Local Offsets
+//Tower Local Offsets (these are the connection points on the model, 3 phases each side)
 const TOWER_OFFSETS = [
   { x: 0.21, y: 6.09, z: 45.47, label: true, id: "L1" },
   { x: 0.35, y: 6.4, z: 36.61, label: false, id: "L2" },
@@ -355,7 +355,6 @@ export class InteractionManager {
           ),
           clampToGround: false,
         },
-        // Billboard removed
         polylineVolume: {
           positions: new CallbackProperty((time) => {
             if (!this.uiManager.showSafetyZoneCheckbox?.checked) {
@@ -437,7 +436,7 @@ export class InteractionManager {
 
   getSafetyRadius() {
     const voltage = parseFloat(this.uiManager.systemVoltageInput?.value || 138);
-    //rough aprox: 3m basic clearance + 1cm per kV
+    //rough aprox: 3m basic clearance + 1cm per kV (common assumption for distribution lines)
     return 3.0 + voltage * 0.01;
   }
 
@@ -454,18 +453,18 @@ export class InteractionManager {
   }
 
   getLoadFactor(hour) {
-    let factor = 0.3; // Base load (night)
-    // Simple Residential Load Profile
+    let factor = 0.3;
+    //simple residential load profile
     if (hour >= 6 && hour < 9) {
-      factor = 0.3 + (hour - 6) * (0.5 / 3); // Morning Ramp (0.3 -> 0.8)
+      factor = 0.3 + (hour - 6) * (0.5 / 3); //morning
     } else if (hour >= 9 && hour < 17) {
-      factor = 0.6; // Day Plateau
+      factor = 0.6; // day plateau
     } else if (hour >= 17 && hour < 19) {
-      factor = 0.6 + (hour - 17) * (0.4 / 2); // Evening Peak Ramp (0.6 -> 1.0)
+      factor = 0.6 + (hour - 17) * (0.4 / 2); //evening peak
     } else if (hour >= 19 && hour < 22) {
-      factor = 1.0; // Peak
+      factor = 1.0;
     } else if (hour >= 22) {
-      factor = 1.0 - (hour - 22) * (0.7 / 2); // Night Ramp (1.0 -> 0.3)
+      factor = 1.0 - (hour - 22) * (0.7 / 2);
     }
     return factor;
   }
@@ -486,14 +485,11 @@ export class InteractionManager {
     const canvas = this._loadProfileCanvas;
     const ctx = canvas.getContext("2d");
 
-    // Clear previous frame
     ctx.clearRect(0, 0, 150, 60);
 
-    // Background
     ctx.fillStyle = "rgba(20, 20, 20, 0.8)";
     ctx.fillRect(0, 0, 150, 60);
 
-    // Draw Grid/Axes
     ctx.strokeStyle = "#444";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -501,7 +497,6 @@ export class InteractionManager {
     ctx.lineTo(150, 50); // X-axis
     ctx.stroke();
 
-    // Draw Load Curve
     ctx.strokeStyle = "#00ffcc";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -517,14 +512,12 @@ export class InteractionManager {
     }
     ctx.stroke();
 
-    // Draw Current Time Indicator
     const date = JulianDate.toDate(time);
     const currentHour = date.getUTCHours() + date.getUTCMinutes() / 60;
     const cx = (currentHour / 24) * 150;
     const cFactor = this.getLoadFactor(currentHour);
     const cy = 50 - cFactor * 40;
 
-    // Vertical Line
     ctx.strokeStyle = "#ff3333";
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 2]);
@@ -534,13 +527,11 @@ export class InteractionManager {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Dot
     ctx.fillStyle = "#ff3333";
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Text
     ctx.fillStyle = "#fff";
     ctx.font = "10px sans-serif";
     ctx.fillText("Daily Load", 5, 12);
@@ -629,7 +620,6 @@ export class InteractionManager {
 
     const totalTemp = ambientTemp + loadHeating;
 
-    // Check if recalculation needed (temp change OR position change)
     if (
       !dirty &&
       lineData.lastTemp !== null &&

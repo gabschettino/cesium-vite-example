@@ -1,7 +1,7 @@
 import { Cartesian3, Transforms, Matrix4 } from "cesium";
 
 /**
- * Function to create a true catenary between two supports (assuming always uneven heights) (done with help of AI)
+ * Function to create a true catenary between two supports (assuming always uneven heights)
  * @param {Cartesian3} startPos
  * @param {Cartesian3} endPos
  * @param {Object} options
@@ -58,9 +58,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       positions.push(Matrix4.multiplyByPoint(enu, local, new Cartesian3()));
     }
 
-    // Calculate Sag (approximate as max vertical distance from chord)
-    // Chord Z at x is z0 + (z1-z0)*t
-    // But simpler: Sag is roughly (z0 + z1)/2 - minZ for level spans.
+    //calculate Sag (approximate as max vertical distance from chord)
     let maxSag = 0;
     for (let i = 0; i <= numPoints; i++) {
       const t = i / numPoints;
@@ -76,7 +74,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
     positions.metadata = {
       a: a,
       sag: maxSag,
-      hTension: a * linearWeight, // H = a * w
+      hTension: a * linearWeight,
       linearWeight: linearWeight,
     };
 
@@ -85,7 +83,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
 
   if (mode === "physics") {
     const a = hTension / Math.max(1e-6, linearWeight);
-    // Solve b so that z(L) - z(0) = dz
+    //solve b so that z(L) - z(0) = dz
     const D = dz;
     const solveB = () => {
       const fb = (b) => a * (Math.cosh((L - b) / a) - Math.cosh(-b / a)) - D;
@@ -206,9 +204,6 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
 
     let guard = 0;
     while (!hasBracket(fLo, fHi) && guard < 20) {
-      // If both positive (Length > S), we need larger a (shorter length) -> increase aHi?
-      // Wait, small a = long length (pos residual). Large a = short length (neg residual).
-      // If both positive, it means even aHi is too small (too long). We need larger aHi.
       if (fLo > 0 && fHi > 0) {
         aHi *= 2;
         fHi = lengthResidual(aHi);
@@ -231,7 +226,7 @@ export function createTransmissionLine(startPos, endPos, options = {}) {
       );
       return createSagBased();
     }
-    // Solve a by bisection
+    //solve a by bisection
     let a = 0.5 * (aLo + aHi);
     for (let i = 0; i < 60; i++) {
       const f = lengthResidual(a);

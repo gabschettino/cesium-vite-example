@@ -26,7 +26,7 @@ export class TransformGizmo {
     this._startEntityPos = null;
     this._startEntityHeading = 0;
 
-    // Gizmo Entities
+    // gizmo
     this.ringEntity = null;
     this.arrowX = null;
     this.arrowY = null;

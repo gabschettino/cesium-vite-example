@@ -25,7 +25,6 @@
       "catenaryConstantDisplay",
     );
 
-    // Tools
     this.placeObjectBtn = document.getElementById("toolPlace");
     this.connectObjectsBtn = document.getElementById("toolConnect");
     this.cursorBtn = document.getElementById("toolCursor");
@@ -41,6 +40,8 @@
     this.lineControlsToggle = document.getElementById("lineControlsToggle");
 
     this.conductors = {
+      //basic parameters for some common ACSR conductors commercially used in the US
+      //weight in kg/m, rated tensile strength (RTS) in kN, temperature coeff alpha in 1/°C
       drake: {
         name: "ACSR Drake",
         weight: 15.97,
